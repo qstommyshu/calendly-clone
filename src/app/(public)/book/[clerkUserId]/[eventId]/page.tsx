@@ -51,29 +51,29 @@ export default async function BookEventPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        {/* Profile Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="flex -space-x-2">
-              <div className="w-16 h-16 rounded-full bg-gray-300 border-4 border-white flex items-center justify-center">
-                <span className="text-lg font-semibold text-gray-600">
+    <div className="min-h-screen bg-gray-50 py-4">
+      <div className="max-w-2xl mx-auto px-2">
+        {/* Compact Profile Header */}
+        <div className="text-center mb-4">
+          <div className="flex justify-center mb-3">
+            <div className="flex -space-x-1">
+              <div className="w-12 h-12 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center">
+                <span className="text-sm font-semibold text-gray-600">
                   {calendarUser.firstName?.[0] || "U"}
                 </span>
               </div>
-              <div className="w-16 h-16 rounded-full bg-blue-500 border-4 border-white flex items-center justify-center">
-                <span className="text-lg font-semibold text-white">
+              <div className="w-12 h-12 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center">
+                <span className="text-sm font-semibold text-white">
                   {event.name[0]}
                 </span>
               </div>
             </div>
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900">
+          <h1 className="text-lg font-semibold text-gray-900 mb-1">
             Hi! Ready to book {event.name}?
           </h1>
           {event.description && (
-            <p className="text-gray-600 mt-2">{event.description}</p>
+            <p className="text-gray-600 text-sm">{event.description}</p>
           )}
         </div>
 
@@ -97,24 +97,28 @@ function NoTimeSlots({
   calendarUser: { id: string; fullName: string | null }
 }) {
   return (
-    <Card className="max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>
-          Book {event.name} with {calendarUser.fullName}
-        </CardTitle>
-        {event.description && (
-          <CardDescription>{event.description}</CardDescription>
-        )}
-      </CardHeader>
-      <CardContent>
-        {calendarUser.fullName} is currently booked up. Please check back later
-        or choose a shorter event.
-      </CardContent>
-      <CardFooter>
-        <Button asChild>
-          <Link href={`/book/${calendarUser.id}`}>Choose Another Event</Link>
-        </Button>
-      </CardFooter>
-    </Card>
+    <div className="max-w-md mx-auto p-4">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">
+            Book {event.name} with {calendarUser.fullName}
+          </CardTitle>
+          {event.description && (
+            <CardDescription className="text-sm">{event.description}</CardDescription>
+          )}
+        </CardHeader>
+        <CardContent className="py-3">
+          <p className="text-sm text-gray-600">
+            {calendarUser.fullName} is currently booked up. Please check back later
+            or choose a shorter event.
+          </p>
+        </CardContent>
+        <CardFooter className="pt-3">
+          <Button asChild size="sm">
+            <Link href={`/book/${calendarUser.id}`}>Choose Another Event</Link>
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   )
 }

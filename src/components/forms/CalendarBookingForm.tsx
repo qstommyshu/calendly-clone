@@ -34,7 +34,7 @@ import {
   subWeeks,
 } from "date-fns"
 import { cn } from "@/lib/utils"
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect, useCallback } from "react"
 import { toZonedTime } from "date-fns-tz"
 import { createMeeting } from "@/server/actions/meetings"
 
@@ -57,6 +57,7 @@ export function CalendarBookingForm({
   const [selectedTime, setSelectedTime] = useState<Date | null>(null)
   const [showBookingForm, setShowBookingForm] = useState(false)
   const [timeSlotPage, setTimeSlotPage] = useState(0)
+  const [initialLoad, setInitialLoad] = useState(true)
 
   const form = useForm<z.infer<typeof meetingFormSchema>>({
     resolver: zodResolver(meetingFormSchema),
@@ -95,9 +96,38 @@ export function CalendarBookingForm({
   const canGoToNextPage = timeSlotPage < totalPages - 1
 
   // Check if date has available times
-  const hasAvailableTimes = (date: Date) => {
+  const hasAvailableTimes = useCallback((date: Date) => {
     return validTimesInTimezone.some(time => isSameDay(time, date))
-  }
+  }, [validTimesInTimezone])
+
+  // Auto-select today if it has available times
+  useEffect(() => {
+    if (selectedDate === null && validTimesInTimezone.length > 0 && initialLoad) {
+      const today = new Date()
+      console.log('Auto-selection check:', {
+        today: today.toDateString(),
+        hasAvailableToday: hasAvailableTimes(today),
+        validTimesCount: validTimesInTimezone.length,
+        weekDaysCount: weekDays.length
+      })
+      
+      // First try to select today regardless of current week view
+      if (hasAvailableTimes(today)) {
+        console.log('Selecting today:', today.toDateString())
+        setSelectedDate(today)
+        setInitialLoad(false)
+        return
+      }
+      
+      // If today doesn't have available times, find first available date in current week
+      const availableDates = weekDays.filter(date => hasAvailableTimes(date))
+      if (availableDates.length > 0) {
+        console.log('Selecting first available date:', availableDates[0].toDateString())
+        setSelectedDate(availableDates[0])
+        setInitialLoad(false)
+      }
+    }
+  }, [validTimesInTimezone, selectedDate, hasAvailableTimes, weekDays, initialLoad])
 
   const handleDateSelect = (date: Date) => {
     if (hasAvailableTimes(date)) {
@@ -250,36 +280,36 @@ export function CalendarBookingForm({
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden max-w-2xl mx-auto">
       {/* Month Navigation */}
-      <div className="flex items-center justify-between p-6 border-b">
+      <div className="flex items-center justify-between p-3 border-b">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('prev')}
-          className="p-2"
+          className="p-1"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-4 w-4" />
         </Button>
         
         <div className="flex items-center space-x-2">
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-base font-semibold">
             {format(centerDate, "MMMM").toUpperCase()}
           </h2>
-          <ChevronDown className="h-4 w-4 text-gray-400" />
+          <ChevronDown className="h-3 w-3 text-gray-400" />
         </div>
         
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('next')}
-          className="p-2"
+          className="p-1"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="p-6">
+      <div className="p-3">
         {/* Week Calendar - 7 days centered around current date */}
-        <div className="grid grid-cols-7 gap-3 mb-8">
+        <div className="grid grid-cols-7 gap-2 mb-4">
           {weekDays.map((day, index) => {
             const isAvailable = hasAvailableTimes(day)
             const isSelected = selectedDate && isSameDay(day, selectedDate)
@@ -288,14 +318,14 @@ export function CalendarBookingForm({
 
             return (
               <div key={day.toISOString()} className="text-center">
-                <div className="text-sm font-medium text-gray-500 mb-2">
+                <div className="text-xs font-medium text-gray-500 mb-1">
                   {WEEKDAYS[dayOfWeek]}
                 </div>
                 <button
                   onClick={() => handleDateSelect(day)}
                   disabled={!isAvailable || isPastDay}
                   className={cn(
-                    "w-full h-16 text-lg font-medium rounded-lg transition-colors",
+                    "w-full h-12 text-sm font-medium rounded-lg transition-colors",
                     "flex items-center justify-center border-2",
                     {
                       "text-gray-900 border-gray-200 hover:border-blue-300": 
@@ -315,19 +345,19 @@ export function CalendarBookingForm({
 
         {/* Time Slots - Below the calendar with pagination */}
         {selectedDate && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigateTimeSlots('prev')}
                 disabled={!canGoToPrevPage}
-                className="p-2"
+                className="p-1"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-3 w-3" />
               </Button>
               
-              <h3 className="font-semibold text-center">
+              <h3 className="font-medium text-center text-sm">
                 {format(selectedDate, "EEEE, MMMM d")}
               </h3>
               
@@ -336,21 +366,21 @@ export function CalendarBookingForm({
                 size="sm"
                 onClick={() => navigateTimeSlots('next')}
                 disabled={!canGoToNextPage}
-                className="p-2"
+                className="p-1"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3 w-3" />
               </Button>
             </div>
             
             {availableTimesForDate.length > 0 ? (
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-2">
                 {paginatedTimeSlots.map(time => (
                   <button
                     key={time.toISOString()}
                     onClick={() => handleTimeSelect(time)}
                     className={cn(
-                      "px-4 py-3 rounded-lg border-2 transition-colors",
-                      "text-center font-medium",
+                      "px-3 py-2 rounded-lg border-2 transition-colors",
+                      "text-center text-sm font-medium",
                       {
                         "bg-blue-600 text-white border-blue-600": 
                           selectedTime && time.getTime() === selectedTime.getTime(),
@@ -364,20 +394,20 @@ export function CalendarBookingForm({
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm text-center">
+              <p className="text-gray-500 text-xs text-center">
                 No available times for this date.
               </p>
             )}
             
             {/* Pagination indicator */}
             {totalPages > 1 && (
-              <div className="flex justify-center space-x-2 mt-4">
+              <div className="flex justify-center space-x-1 mt-2">
                 {Array.from({ length: totalPages }, (_, i) => (
                   <button
                     key={i}
                     onClick={() => setTimeSlotPage(i)}
                     className={cn(
-                      "w-2 h-2 rounded-full transition-colors",
+                      "w-1.5 h-1.5 rounded-full transition-colors",
                       {
                         "bg-blue-600": i === timeSlotPage,
                         "bg-gray-300": i !== timeSlotPage,

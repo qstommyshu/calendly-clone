@@ -1,4 +1,5 @@
 import { CopyEventButton } from "@/components/CopyEventButton"
+import { CalendarBookingForm } from "@/components/forms/CalendarBookingForm"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -9,10 +10,17 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { db } from "@/drizzle/db"
+import { getValidTimesFromSchedule } from "@/lib/getValidTimesFromSchedule"
 import { formatEventDescription } from "@/lib/formatters"
 import { cn } from "@/lib/utils"
 import { auth } from "@clerk/nextjs/server"
 import { CalendarPlus, CalendarRange } from "lucide-react"
+import {
+  addMonths,
+  eachMinuteOfInterval,
+  endOfDay,
+  roundToNearestMinutes,
+} from "date-fns"
 import Link from "next/link"
 
 export const revalidate = 0
@@ -40,7 +48,7 @@ export default async function EventsPage() {
         </Button>
       </div>
       {events.length > 0 ? (
-        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(400px,1fr))]">
+        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(600px,1fr))]">
           {events.map(event => (
             <EventCard key={event.id} {...event} />
           ))}
@@ -70,7 +78,7 @@ type EventCardProps = {
   clerkUserId: string
 }
 
-function EventCard({
+async function EventCard({
   id,
   isActive,
   name,
@@ -78,6 +86,22 @@ function EventCard({
   durationInMinutes,
   clerkUserId,
 }: EventCardProps) {
+  // Generate validTimes for the preview
+  let validTimes: Date[] = []
+  if (isActive) {
+    const event = { id, name, description, durationInMinutes, clerkUserId, isActive }
+    const startDate = roundToNearestMinutes(new Date(), {
+      nearestTo: 15,
+      roundingMethod: "ceil",
+    })
+    const endDate = endOfDay(addMonths(startDate, 2))
+    
+    validTimes = await getValidTimesFromSchedule(
+      eachMinuteOfInterval({ start: startDate, end: endDate }, { step: 15 }),
+      event
+    )
+  }
+
   return (
     <Card className={cn("flex flex-col", !isActive && "border-secondary/50")}>
       <CardHeader className={cn(!isActive && "opacity-50")}>
@@ -91,6 +115,21 @@ function EventCard({
           {description}
         </CardContent>
       )}
+      
+      {/* Event Preview Calendar */}
+      {isActive && validTimes.length > 0 && (
+        <CardContent className="px-4 pb-4">
+          <div className="border rounded-lg overflow-hidden">
+            <CalendarBookingForm
+              validTimes={validTimes}
+              eventId={id}
+              clerkUserId={clerkUserId}
+              event={{ name, durationInMinutes }}
+            />
+          </div>
+        </CardContent>
+      )}
+      
       <CardFooter className="flex justify-end gap-2 mt-auto">
         {isActive && (
           <CopyEventButton
