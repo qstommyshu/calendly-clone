@@ -1,4 +1,4 @@
-import { MeetingForm } from "@/components/forms/MeetingForm"
+import { CalendarBookingForm } from "@/components/forms/CalendarBookingForm"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -51,23 +51,41 @@ export default async function BookEventPage({
   }
 
   return (
-    <Card className="max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>
-          Book {event.name} with {calendarUser.fullName}
-        </CardTitle>
-        {event.description && (
-          <CardDescription>{event.description}</CardDescription>
-        )}
-      </CardHeader>
-      <CardContent>
-        <MeetingForm
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Profile Header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="flex -space-x-2">
+              <div className="w-16 h-16 rounded-full bg-gray-300 border-4 border-white flex items-center justify-center">
+                <span className="text-lg font-semibold text-gray-600">
+                  {calendarUser.firstName?.[0] || "U"}
+                </span>
+              </div>
+              <div className="w-16 h-16 rounded-full bg-blue-500 border-4 border-white flex items-center justify-center">
+                <span className="text-lg font-semibold text-white">
+                  {event.name[0]}
+                </span>
+              </div>
+            </div>
+          </div>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            Hi! Ready to book {event.name}?
+          </h1>
+          {event.description && (
+            <p className="text-gray-600 mt-2">{event.description}</p>
+          )}
+        </div>
+
+        {/* Calendar Booking Interface */}
+        <CalendarBookingForm
           validTimes={validTimes}
           eventId={event.id}
           clerkUserId={clerkUserId}
+          event={event}
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
