@@ -14,9 +14,17 @@ import {
 import { Input } from "../ui/input"
 import { Button } from "../ui/button"
 import { Textarea } from "../ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select"
 import { meetingFormSchema } from "@/schema/meetings"
 import {
   formatTimeString,
+  formatTimezoneOffset,
 } from "@/lib/formatters"
 import { 
   ChevronLeft, 
@@ -40,6 +48,8 @@ import { createMeeting } from "@/server/actions/meetings"
 
 const WEEKDAYS = ["Sun", "Mon", "Tues", "Wed", "Thur", "Fri", "Sat"]
 const TIME_SLOTS_PER_PAGE = 6
+
+
 
 export function CalendarBookingForm({
   validTimes,
@@ -279,6 +289,37 @@ export function CalendarBookingForm({
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden max-w-2xl mx-auto">
+      {/* Timezone Selector */}
+      <div className="p-3 border-b bg-gray-50">
+        <Form {...form}>
+          <FormField
+            control={form.control}
+            name="timezone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Timezone</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {Intl.supportedValuesOf("timeZone").map(timezone => (
+                      <SelectItem key={timezone} value={timezone}>
+                        {timezone}
+                        {` (${formatTimezoneOffset(timezone)})`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </Form>
+      </div>
+
       {/* Month Navigation */}
       <div className="flex items-center justify-between p-3 border-b">
         <Button

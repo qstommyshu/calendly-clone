@@ -74,10 +74,16 @@ export function ScheduleForm({
     fields: availabilityFields,
   } = useFieldArray({ name: "availabilities", control: form.control })
 
-  const groupedAvailabilityFields = Object.groupBy(
-    availabilityFields.map((field, index) => ({ ...field, index })),
-    availability => availability.dayOfWeek
-  )
+  const groupedAvailabilityFields = availabilityFields
+    .map((field, index) => ({ ...field, index }))
+    .reduce((acc, availability) => {
+      const day = availability.dayOfWeek
+      if (!acc[day]) {
+        acc[day] = []
+      }
+      acc[day].push(availability)
+      return acc
+    }, {} as Record<string, Array<typeof availabilityFields[0] & { index: number }>>)
 
   async function onSubmit(values: z.infer<typeof scheduleFormSchema>) {
     const data = await saveSchedule(values)
