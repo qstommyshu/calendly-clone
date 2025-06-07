@@ -1,4 +1,5 @@
 import { CopyEventButton } from "@/components/CopyEventButton"
+import { CopyPrimaryEventButton } from "@/components/CopyPrimaryEventButton"
 import { CalendarBookingForm } from "@/components/forms/CalendarBookingForm"
 import { Button } from "@/components/ui/button"
 import {
@@ -41,6 +42,7 @@ export default async function EventsPage() {
         <h1 className="text-3xl lg:text-4xl xl:text-5xl font-semibold mb-6">
           Events
         </h1>
+        <CopyPrimaryEventButton variant="outline" clerkUserId={userId} />
         <Button asChild>
           <Link href="/events/new">
             <CalendarPlus className="mr-4 size-6" /> New Event
@@ -91,13 +93,13 @@ async function EventCard({
   if (isActive) {
     const event = { id, name, description, durationInMinutes, clerkUserId, isActive }
     const startDate = roundToNearestMinutes(new Date(), {
-      nearestTo: 15,
+      nearestTo: 30,
       roundingMethod: "ceil",
     })
     const endDate = endOfDay(addMonths(startDate, 2))
     
     validTimes = await getValidTimesFromSchedule(
-      eachMinuteOfInterval({ start: startDate, end: endDate }, { step: 15 }),
+      eachMinuteOfInterval({ start: startDate, end: endDate }, { step: 30 }),
       event
     )
   }

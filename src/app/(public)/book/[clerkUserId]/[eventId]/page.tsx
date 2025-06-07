@@ -36,7 +36,7 @@ export default async function BookEventPage({
 
   const calendarUser = await clerkClient().users.getUser(clerkUserId)
   const startDate = roundToNearestMinutes(new Date(), {
-    nearestTo: 15,
+    nearestTo: 30,
     roundingMethod: "ceil",
   })
   const endDate = endOfDay(addMonths(startDate, 2))

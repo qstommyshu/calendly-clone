@@ -26,9 +26,13 @@ import {
 } from "../ui/select"
 import { formatTimezoneOffset } from "@/lib/formatters"
 import { Fragment, useState } from "react"
-import { Plus, X } from "lucide-react"
+import { Plus, X, Calendar, Copy } from "lucide-react"
 import { Input } from "../ui/input"
 import { saveSchedule } from "@/server/actions/schedule"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
+import { Switch } from "../ui/switch"
+import { Label } from "../ui/label"
+import { Textarea } from "../ui/textarea"
 
 type Availability = {
   startTime: string
@@ -38,11 +42,16 @@ type Availability = {
 
 export function ScheduleForm({
   schedule,
+  userId,
 }: {
   schedule?: {
     timezone: string
+    primaryEventEnabled?: boolean
+    primaryEventDuration?: number
+    primaryEventDescription?: string | null
     availabilities: Availability[]
   }
+  userId: string
 }) {
   const [successMessage, setSuccessMessage] = useState<string>()
   const form = useForm<z.infer<typeof scheduleFormSchema>>({
@@ -50,6 +59,9 @@ export function ScheduleForm({
     defaultValues: {
       timezone:
         schedule?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+      primaryEventEnabled: schedule?.primaryEventEnabled ?? true,
+      primaryEventDuration: schedule?.primaryEventDuration ?? 30,
+      primaryEventDescription: schedule?.primaryEventDescription ?? "",
       availabilities: schedule?.availabilities.toSorted((a, b) => {
         return timeToInt(a.startTime) - timeToInt(b.startTime)
       }),
@@ -79,6 +91,16 @@ export function ScheduleForm({
     }
   }
 
+  const copyPrimaryEventUrl = async () => {
+    try {
+      const url = `${window.location.origin}/book/${userId}/primary`
+      await navigator.clipboard.writeText(url)
+      setSuccessMessage("Primary event URL copied to clipboard!")
+    } catch (err) {
+      console.error("Failed to copy URL: ", err)
+    }
+  }
+
   return (
     <Form {...form}>
       <form
@@ -93,6 +115,7 @@ export function ScheduleForm({
         {successMessage && (
           <div className="text-green-500 text-sm">{successMessage}</div>
         )}
+        
         <FormField
           control={form.control}
           name="timezone"
@@ -118,6 +141,102 @@ export function ScheduleForm({
             </FormItem>
           )}
         />
+
+        {/* Primary Event Configuration */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Primary Event Configuration
+            </CardTitle>
+            <CardDescription>
+              Set up your default booking option accessible via a simple URL
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="primaryEventEnabled"
+              render={({ field }) => (
+                <FormItem className="flex items-center space-x-2">
+                  <FormControl>
+                    <Switch 
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel>Enable Primary Event</FormLabel>
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="primaryEventDuration"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Meeting Duration</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(parseInt(value))}
+                    defaultValue={field.value.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="15">15 minutes</SelectItem>
+                      <SelectItem value="30">30 minutes</SelectItem>
+                      <SelectItem value="45">45 minutes</SelectItem>
+                      <SelectItem value="60">60 minutes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="primaryEventDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Event Description (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Brief description of your primary meeting type..."
+                      className="resize-none"
+                      rows={3}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <div className="bg-muted p-3 rounded-md">
+              <Label className="text-sm font-medium">Your Primary Booking URL</Label>
+              <div className="flex items-center gap-2 mt-1">
+                                 <Input 
+                   value={`${typeof window !== 'undefined' ? window.location.origin : ''}/book/${userId}/primary`}
+                   readOnly 
+                   className="text-sm"
+                 />
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  size="sm"
+                  onClick={copyPrimaryEventUrl}
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-[auto,1fr] gap-y-6 gap-x-4">
           {DAYS_OF_WEEK_IN_ORDER.map(dayOfWeek => (

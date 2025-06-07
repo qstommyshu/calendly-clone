@@ -4,6 +4,10 @@ import { z } from "zod"
 
 export const scheduleFormSchema = z.object({
   timezone: z.string().min(1, "Required"),
+  // Primary Event Configuration
+  primaryEventEnabled: z.boolean().default(true),
+  primaryEventDuration: z.number().int().min(15).max(180).default(30),
+  primaryEventDescription: z.string().optional(),
   availabilities: z
     .array(
       z.object({

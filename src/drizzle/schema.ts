@@ -38,6 +38,9 @@ export const ScheduleTable = pgTable("schedules", {
   id: uuid("id").primaryKey().defaultRandom(),
   timezone: text("timezone").notNull(),
   clerkUserId: text("clerkUserId").notNull().unique(),
+  primaryEventDuration: integer("primaryEventDuration").notNull().default(30),
+  primaryEventDescription: text("primaryEventDescription"),
+  primaryEventEnabled: boolean("primaryEventEnabled").notNull().default(true),
   createdAt,
   updatedAt,
 })

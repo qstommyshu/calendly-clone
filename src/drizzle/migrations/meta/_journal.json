@@ -8,6 +8,13 @@
       "when": 1725382070346,
       "tag": "0000_dazzling_penance",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1749299624395,
+      "tag": "0001_far_swordsman",
+      "breakpoints": true
     }
   ]
 }

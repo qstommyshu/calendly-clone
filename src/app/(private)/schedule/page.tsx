@@ -21,7 +21,7 @@ export default async function SchedulePage() {
         <CardTitle>Schedule</CardTitle>
       </CardHeader>
       <CardContent>
-        <ScheduleForm schedule={schedule} />
+        <ScheduleForm schedule={schedule} userId={userId} />
       </CardContent>
     </Card>
   )
